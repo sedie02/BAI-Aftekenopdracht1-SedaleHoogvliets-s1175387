@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 
 namespace BAI
@@ -14,14 +15,43 @@ namespace BAI
         public static UInt64 Opg1aDecodeBase27(string base27getal)
         {
             // *** IMPLEMENTATION HERE *** //
+            //  base27 -> base10:  som(karakterWaarde * factor)     |   factor = 27^machtsfactor gebaseerd op karakterpositie *van rechts naar links startend bij 0*
 
-            return 0;
+            
+            ulong som = 0; // uiteindelijk gedecodeerde waarde
+            ulong factor = 1; // begint met 27^0=1 (dan 27^1=27  etc)
+
+            for (int i = base27getal.Length - 1; i >= 0; i--)//loop per karakter door base27 getal. en we beginnen rechts
+            {
+                //karakter waarde krijgen
+                char c = base27getal[i];
+                int karakterWaarde = BASE27CIJFERS.IndexOf(c);
+
+                som += (ulong)karakterWaarde * factor;
+                factor *= 27; // volgend karakter = volgende macht 
+            }
+
+            return som;
         }
         public static string Opg1bEncodeBase27(UInt64 base10getal)
         {
             // *** IMPLEMENTATION HERE *** //
+            // base10 -> base27: 
+            if (base10getal == 0)
+            {
+                return BASE27CIJFERS[0].ToString(); // "-" staat voor 0
+            }
 
-            return "";
+            string resultaat = ""; //uiteindelijk encoded getal
+
+            while (base10getal > 0)
+            {
+                ulong rest = base10getal % 27;               // rest berekenen met modulo
+                resultaat = BASE27CIJFERS[(int)rest] + resultaat; // rest omzetten naar base27 karakter en toevoegen aan resultaat
+                base10getal /= 27;                           // ga verder met quotiënt
+            }
+
+            return resultaat;
         }
 
         // ***************
@@ -30,12 +60,40 @@ namespace BAI
         public static Stack<UInt64> Opdr2aWoordStack(List<string> woorden)
         {
             // *** IMPLEMENTATION HERE *** //
-            return null;
+            Stack<UInt64> stack = new Stack<UInt64>();
+
+            foreach (string woord in woorden)
+            {
+                //decoderen en pushen naar stack
+                UInt64 waarde = Opg1aDecodeBase27(woord); 
+                stack.Push(waarde); 
+            }
+
+            return stack;
         }
         public static Queue<string> Opdr2bKorteWoordenQueue(Stack<UInt64> woordstack)
         {
             // *** IMPLEMENTATION HERE *** //
-            return null;
+            Queue<string> queue = new Queue<string>();
+
+            while (woordstack.Count > 0)
+            {
+                // van stack weghalen en converteer naar base27
+                UInt64 waarde = woordstack.Pop();
+
+                // alleen in que als het een klein woord is. Alle getallen < 27^3(19683) hebben 3 letters.
+                if (waarde < 19683)
+                {
+                    // kleine woorden encoderen
+                    string woord = Opg1bEncodeBase27(waarde);
+                    queue.Enqueue(woord);
+                }
+                   
+
+
+            }
+
+            return queue;
         }
 
         static void Main(string[] args)
